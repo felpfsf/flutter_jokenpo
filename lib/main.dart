@@ -31,11 +31,12 @@ class JokenpoHome extends StatefulWidget {
 
 class _JokenpoHomeState extends State<JokenpoHome>
     with SingleTickerProviderStateMixin {
-  String _message = 'Faça sua jogada!';
-  IconData? _pcChoiceImage;
-  IconData? _userChoiceImage;
-  bool _showChoice = false;
-  bool _isAnimating = false;
+  final ValueNotifier<String> _messageNotifier =
+      ValueNotifier('Faça sua jogada!');
+  final ValueNotifier<IconData?> _pcChoiceImageNotifier = ValueNotifier(null);
+  final ValueNotifier<IconData?> _userChoiceImageNotifier = ValueNotifier(null);
+  final ValueNotifier<bool> _showChoiceNotifier = ValueNotifier(false);
+  final ValueNotifier<bool> _isAnimatingNotifier = ValueNotifier(false);
   int _playCount = 0;
   late AnimationController _controller;
 
@@ -51,6 +52,11 @@ class _JokenpoHomeState extends State<JokenpoHome>
   @override
   void dispose() {
     _controller.dispose();
+    _messageNotifier.dispose();
+    _pcChoiceImageNotifier.dispose();
+    _userChoiceImageNotifier.dispose();
+    _showChoiceNotifier.dispose();
+    _isAnimatingNotifier.dispose();
     super.dispose();
   }
 
@@ -65,35 +71,31 @@ class _JokenpoHomeState extends State<JokenpoHome>
       'scissors': JokenpoIcons.scissors,
     };
 
-    setState(() {
-      _showChoice = false;
-      _message = 'Estou escolhendo...';
-      _playCount++;
-      _userChoiceImage = images[userChoice];
+    _showChoiceNotifier.value = false;
+    _messageNotifier.value = 'Estou escolhendo...';
+    _playCount++;
+    _userChoiceImageNotifier.value = images[userChoice];
 
-      if (_playCount > 1) {
-        _controller.repeat();
-        _isAnimating = true;
-      }
-    });
+    if (_playCount > 1) {
+      _controller.repeat();
+      _isAnimatingNotifier.value = true;
+    }
 
     Future.delayed(const Duration(milliseconds: 1000), () {
-      setState(() {
-        _pcChoiceImage = images[pcChoice];
-        _showChoice = true;
-        _isAnimating = false;
-        _controller.repeat();
-      });
+      _pcChoiceImageNotifier.value = images[pcChoice];
+      _showChoiceNotifier.value = true;
+      _isAnimatingNotifier.value = false;
+      _controller.repeat();
 
       setState(() {
         if ((userChoice == 'rock' && pcChoice == 'scissors') ||
             (userChoice == 'scissors' && pcChoice == 'paper') ||
             (userChoice == 'paper' && pcChoice == 'rock')) {
-          _message = "Ah não, voce ganhou! :(";
+          _messageNotifier.value = "Ah não, voce ganhou! :(";
         } else if (userChoice == pcChoice) {
-          _message = "Sem graça, deu empate!";
+          _messageNotifier.value = "Sem graça, deu empate!";
         } else {
-          _message = "Uuhl, voce perdeu! XD";
+          _messageNotifier.value = "Uuhl, voce perdeu! XD";
         }
       });
     });
@@ -111,51 +113,61 @@ class _JokenpoHomeState extends State<JokenpoHome>
             style: TextStyle(fontSize: 30),
           ),
           const SizedBox(height: 20),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 500),
-            child: _showChoice && _pcChoiceImage != null
-                ? Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Column(
+          ValueListenableBuilder(
+            valueListenable: _showChoiceNotifier,
+            builder: (context, showChoice, child) {
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 500),
+                child: showChoice && _pcChoiceImageNotifier.value != null
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Icon(
-                            _pcChoiceImage,
-                            size: 80,
+                          Column(
+                            children: [
+                              Icon(
+                                _pcChoiceImageNotifier.value,
+                                size: 80,
+                              ),
+                              const Text('Minha escolha')
+                            ],
                           ),
-                          const Text('Minha escolha')
-                        ],
-                      ),
-                      const Text('X'),
-                      Column(
-                        children: [
-                          Icon(
-                            _userChoiceImage!,
-                            size: 80,
-                          ),
-                          const Text('Sua escolha')
+                          const Text('X'),
+                          Column(
+                            children: [
+                              Icon(
+                                _userChoiceImageNotifier.value,
+                                size: 80,
+                              ),
+                              const Text('Sua escolha')
+                            ],
+                          )
                         ],
                       )
-                    ],
-                  )
-                : RotationTransition(
-                    key: const ValueKey('image'),
-                    turns: _controller,
-                    child: Image.asset(
-                      'assets/images/rock-paper-scissors.png',
-                      width: 100,
-                      height: 100,
-                    ),
-                  ),
+                    : RotationTransition(
+                        key: const ValueKey('image'),
+                        turns: _controller,
+                        child: Image.asset(
+                          'assets/images/rock-paper-scissors.png',
+                          width: 100,
+                          height: 100,
+                        ),
+                      ),
+              );
+            },
           ),
           const SizedBox(height: 60),
-          Text(
-            _message,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
+          ValueListenableBuilder(
+            valueListenable: _messageNotifier,
+            builder: (context, message, child) {
+              return Text(
+                message,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              );
+            },
           ),
           const SizedBox(height: 60),
           Row(
