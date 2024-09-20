@@ -4,12 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_jokenpo_app/jokenpo_icons.dart';
 import 'package:provider/provider.dart';
 
-// Main
 void main() {
   runApp(const JokenpoApp());
 }
 
-// APP
 class JokenpoApp extends StatelessWidget {
   const JokenpoApp({super.key});
 
@@ -24,8 +22,6 @@ class JokenpoApp extends StatelessWidget {
     );
   }
 }
-
-// Home
 
 class JokenpoHome extends StatefulWidget {
   const JokenpoHome({super.key});
@@ -177,21 +173,42 @@ class JokenpoController extends ChangeNotifier {
     _controller.dispose();
   }
 
-  void userChoice(String userChoice) {
+  String _randomChoice() {
     List<String> choices = ['rock', 'paper', 'scissors'];
     int randomNum = Random().nextInt(3);
-    String pcChoice = choices[randomNum];
+    return choices[randomNum];
+  }
 
+  String _getResultMessage(String userChoice, String pcChoice) {
+    if (userChoice == pcChoice) {
+      return "Sem graça, deu empate!";
+    }
+
+    if ((userChoice == 'rock' && pcChoice == 'scissors') ||
+        (userChoice == 'scissors' && pcChoice == 'paper') ||
+        (userChoice == 'paper' && pcChoice == 'rock')) {
+      return "Ah não, voce ganhou! :(";
+    } else {
+      return "Uuhl, voce perdeu! XD";
+    }
+  }
+
+  IconData? _getIcon(String choice) {
     final Map<String, IconData> images = {
       'rock': JokenpoIcons.rock,
       'paper': JokenpoIcons.paper,
       'scissors': JokenpoIcons.scissors,
     };
+    return images[choice];
+  }
+
+  void userChoice(String userChoice) {
+    String pcChoice = _randomChoice();
 
     _showChoice = false;
     _message = 'Estou escolhendo...';
     _playCount++;
-    _userChoiceImage = images[userChoice];
+    _userChoiceImage = _getIcon(userChoice);
     _controller.repeat();
 
     if (_playCount > 1) {
@@ -200,23 +217,13 @@ class JokenpoController extends ChangeNotifier {
     }
 
     Future.delayed(const Duration(milliseconds: 1000), () {
-      _pcChoiceImage = images[pcChoice];
+      _pcChoiceImage = _getIcon(pcChoice);
       _showChoice = true;
       _isAnimating = false;
       _controller.stop();
       notifyListeners();
 
-      if ((userChoice == 'rock' && pcChoice == 'scissors') ||
-          (userChoice == 'scissors' && pcChoice == 'paper') ||
-          (userChoice == 'paper' && pcChoice == 'rock')) {
-        _message = "Ah não, você ganhou! :(";
-      } else if (userChoice == pcChoice) {
-        _message = "Sem graça, deu empate!";
-      } else {
-        _message = "Uuhl, você perdeu! XD";
-      }
-
-      notifyListeners();
+      _message = _getResultMessage(userChoice, pcChoice);
     });
   }
 }
