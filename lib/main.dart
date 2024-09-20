@@ -81,13 +81,14 @@ class _JokenpoHomeState extends State<JokenpoHome>
       _isAnimatingNotifier.value = true;
     }
 
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      _pcChoiceImageNotifier.value = images[pcChoice];
-      _showChoiceNotifier.value = true;
-      _isAnimatingNotifier.value = false;
-      _controller.repeat();
+    Future.delayed(
+      const Duration(milliseconds: 1000),
+      () {
+        _pcChoiceImageNotifier.value = images[pcChoice];
+        _showChoiceNotifier.value = true;
+        _isAnimatingNotifier.value = false;
+        _controller.repeat();
 
-      setState(() {
         if ((userChoice == 'rock' && pcChoice == 'scissors') ||
             (userChoice == 'scissors' && pcChoice == 'paper') ||
             (userChoice == 'paper' && pcChoice == 'rock')) {
@@ -97,8 +98,8 @@ class _JokenpoHomeState extends State<JokenpoHome>
         } else {
           _messageNotifier.value = "Uuhl, voce perdeu! XD";
         }
-      });
-    });
+      },
+    );
   }
 
   @override
