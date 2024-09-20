@@ -60,21 +60,43 @@ class _JokenpoHomeState extends State<JokenpoHome>
     super.dispose();
   }
 
-  void _userChoice(String userChoice) {
+  String _randomChoice() {
     List<String> choices = ['rock', 'paper', 'scissors'];
     int rdnNum = Random().nextInt(3);
-    String pcChoice = choices[rdnNum];
+    return choices[rdnNum];
+  }
 
+  String _getResultMessage(String userChoice, String pcChoice) {
+    if (userChoice == pcChoice) {
+      return "Sem graça, deu empate!";
+    }
+
+    if ((userChoice == 'rock' && pcChoice == 'scissors') ||
+        (userChoice == 'scissors' && pcChoice == 'paper') ||
+        (userChoice == 'paper' && pcChoice == 'rock')) {
+      return "Ah não, voce ganhou! :(";
+    } else {
+      return "Uuhl, voce perdeu! XD";
+    }
+  }
+
+  IconData? _getIcon(String choice) {
     final Map<String, IconData> images = {
       'rock': JokenpoIcons.rock,
       'paper': JokenpoIcons.paper,
       'scissors': JokenpoIcons.scissors,
     };
 
+    return images[choice];
+  }
+
+  void _userChoice(String userChoice) {
+    String pcChoice = _randomChoice();
+
     _showChoiceNotifier.value = false;
     _messageNotifier.value = 'Estou escolhendo...';
     _playCount++;
-    _userChoiceImageNotifier.value = images[userChoice];
+    _userChoiceImageNotifier.value = _getIcon(userChoice);
 
     if (_playCount > 1) {
       _controller.repeat();
@@ -84,20 +106,12 @@ class _JokenpoHomeState extends State<JokenpoHome>
     Future.delayed(
       const Duration(milliseconds: 1000),
       () {
-        _pcChoiceImageNotifier.value = images[pcChoice];
+        _pcChoiceImageNotifier.value = _getIcon(pcChoice);
         _showChoiceNotifier.value = true;
         _isAnimatingNotifier.value = false;
         _controller.repeat();
 
-        if ((userChoice == 'rock' && pcChoice == 'scissors') ||
-            (userChoice == 'scissors' && pcChoice == 'paper') ||
-            (userChoice == 'paper' && pcChoice == 'rock')) {
-          _messageNotifier.value = "Ah não, voce ganhou! :(";
-        } else if (userChoice == pcChoice) {
-          _messageNotifier.value = "Sem graça, deu empate!";
-        } else {
-          _messageNotifier.value = "Uuhl, voce perdeu! XD";
-        }
+        _messageNotifier.value = _getResultMessage(userChoice, pcChoice);
       },
     );
   }
